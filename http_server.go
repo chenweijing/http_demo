@@ -8,8 +8,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -44,31 +44,24 @@ func (s *RPCServer) rpc(event int, i interface{}) (*miliao.RPCResult, error) {
 
 	t := miliao.NewChatorClient(conn)
 
-	var result miliao.RPCResult
-	var rpcErr error
+	var result *miliao.RPCResult
 
 	switch event {
 	case LoginEvent:
 		user, _ := i.(miliao.User)
-		res, _ := t.Login(context.Background(), &user)
-		fmt.Printf("LOGIN:%s %s\n", user.GetName(), user.GetPassword())
-		result = *res
+		result, err = t.Login(context.Background(), &user)
 	case chatEvent:
 		msg, _ := i.(miliao.ChatMsg)
-		res, _ := t.Chat(context.Background(), &msg)
-		result = *res
-		fmt.Printf("CHAT:%s %s\n", msg.GetUserId(), msg.GetMsg())
+		result, err = t.Chat(context.Background(), &msg)
 	default:
 		break
 	}
 
-	if rpcErr != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("RPC: code:%d err:%s token:%s", result.ErrorCode, result.Err, result.Result)
-
-	return &result, nil
+	return result, nil
 }
 
 // http请求处理，根据event进行rpc路由
@@ -89,7 +82,7 @@ func httpRequest(w *http.ResponseWriter, event int, i interface{}) {
 	}
 
 	ret, _ := json.Marshal(res)
-	fmt.Fprint(*w, string(ret))
+    fmt.Fprintf(*w, string(ret))
 }
 
 // 登录handle
